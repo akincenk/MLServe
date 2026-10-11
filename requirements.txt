@@ -1,5 +1,6 @@
 fastapi==0.143.0
 uvicorn==0.54.0
 scikit-learn==1.9.1
-# range, not pin: numpy 2.5+ requires Python 3.12
-numpy>=2.0,<3
+# NumPy 2.5 requires Python 3.12+, so 3.11 gets the last release that supports it.
+numpy==2.4.6; python_version < "3.12"
+numpy==2.5.4; python_version >= "3.12"
