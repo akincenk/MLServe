@@ -56,13 +56,28 @@ pip install -r requirements-dev.txt
 ruff check . && pytest
 ```
 
-Tests check that training is reproducible (identical probabilities across runs), held-out accuracy is at least 0.9, known samples are classified correctly, and malformed input (missing, negative, out-of-range, non-numeric, unknown fields) is rejected. CI runs them on Python 3.11 and 3.12.
+Tests check that training is reproducible (identical probabilities across runs), held-out accuracy is at least 0.85 (typical is 0.93 or higher; the margin keeps library upgrades from making the test flaky), nine canonical samples (textbook Iris rows and per-class means) are classified correctly through the API, and malformed input (missing, negative, out-of-range, non-numeric, unknown fields) is rejected. Any warning fails the test run. CI runs ruff, `pip-audit` and pytest on Python 3.11 and 3.12, and builds the Docker image. Dependabot opens weekly update PRs for pip packages and GitHub Actions.
 
 ## Limitations / next steps
 
 - One fixed toy model; there is no model registry, versioning or hot reload.
-- No batch endpoint, authentication or rate limiting.
+- No batch endpoint, authentication or rate limiting (see Security).
 - For a model that is expensive to train, save it with `skops` or ONNX at build time and load it at startup instead of retraining.
+
+## Design decisions
+
+- **Train at startup instead of loading a file.** Iris trains in well under a second, and not loading a pickle removes a code-execution risk and a build artifact to manage.
+- **Fixed seed and stratified split.** Every process serves the same model and reports the same held-out accuracy, which makes the tests exact.
+- **Named fields instead of a feature list.** `{"sepal_length": ...}` is self-documenting and lets Pydantic validate each value; `extra: forbid` catches typos.
+- **Sync handler.** `/predict` is a plain `def`, so the scikit-learn call runs in FastAPI's thread pool rather than blocking the event loop.
+- **Exact dependency pins.** NumPy is pinned per Python version because NumPy 2.5 dropped Python 3.11.
+
+## Security
+
+- The API only reads input and returns a prediction: it stores nothing, calls no paid service and holds no secrets, so it has no authentication. Put it behind a gateway with auth and rate limiting before exposing it publicly.
+- Input is strictly validated (types, ranges, no extra fields); bad requests get `422` before reaching the model.
+- No model file is deserialised, so there is no pickle attack surface.
+- The Docker image runs as a non-root user.
 
 ## License
 
