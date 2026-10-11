@@ -1,6 +1,5 @@
-fastapi
-uvicorn
-scikit-learn
-joblib
-numpy
-pydantic
+fastapi==0.143.0
+uvicorn==0.54.0
+scikit-learn==1.9.1
+# range, not pin: numpy 2.5+ requires Python 3.12
+numpy>=2.0,<3
