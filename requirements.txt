@@ -1,4 +1,4 @@
-fastapi==0.143.0
+fastapi==0.162.0
 uvicorn==0.54.0
 scikit-learn==1.9.1
 # NumPy 2.5 requires Python 3.12+, so 3.11 gets the last release that supports it.
